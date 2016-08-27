@@ -1,18 +1,11 @@
 [workspace]
-members = ["profiler-rt"]
+members = ["profiler-rt", "llvm-profdata"]
 
 [package]
 name = "cargo-pgo"
 version = "0.1.0"
 authors = ["Vadim Chugunov <vadimcn@gmail.com>"]
-build = "build.rs"
 
 [[bin]]
 name = "cargo-pgo"
 path = "src/main.rs"
-
-[dependencies]
-clap = "^2.10"
-
-[build-dependencies]
-cmake = "^0.1"
