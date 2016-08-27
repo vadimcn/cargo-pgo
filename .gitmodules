@@ -1,0 +1,8 @@
+[submodule "compiler-rt"]
+	path = profiler-rt/compiler-rt
+	url = https://github.com/rust-lang/compiler-rt.git
+	shallow = true
+[submodule "llvm"]
+	path = llvm-profdata/llvm
+	url = https://github.com/rust-lang/llvm.git
+	shallow = true
