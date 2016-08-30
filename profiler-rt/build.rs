@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 fn main() {
     let dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap())
-        .join("compiler-rt/lib/profile"); 
+        .join("compiler-rt/lib/profile");
     gcc::Config::new()
                 .file(dir.join("GCDAProfiling.c"))
                 .file(dir.join("InstrProfiling.c"))
@@ -27,5 +27,5 @@ fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let from = out_dir.join("libprofiler-rt.a");
     let to = out_dir.join("..").join("..").join("..").join("libprofiler-rt.a");
-    fs::copy(from, to).unwrap(); 
+    fs::copy(from, to).unwrap();
 }

@@ -30,7 +30,7 @@ cpp! {
 #include "rust_types.h"
 
 raw {
-  using namespace llvm;  
+  using namespace llvm;
 
   static void exitWithError(const Twine &Message, StringRef Whence = "",
                             StringRef Hint = "") {
@@ -99,7 +99,7 @@ raw {
   }
 }
 
-  fn merge_instr_profiles_impl(inputs: &[&str] as "rs::Slice<rs::Slice<char>>", 
+  fn merge_instr_profiles_impl(inputs: &[&str] as "rs::Slice<rs::Slice<char>>",
                               output: &str as "rs::Slice<char>") -> bool as "bool" {
     llvm_shutdown_obj shutdown;
 
@@ -153,4 +153,4 @@ pub fn merge_instr_profiles(inputs: &[&str], output: &str) -> bool {
   unsafe {
     merge_instr_profiles_impl(inputs, output)
   }
-} 
+}
