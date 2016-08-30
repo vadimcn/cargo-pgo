@@ -1,5 +1,6 @@
 extern crate gcc;
 use std::env;
+use std::fs;
 use std::path::PathBuf;
 
 fn main() {
@@ -20,5 +21,10 @@ fn main() {
                 .file(dir.join("InstrProfilingUtil.c"))
                 .file(dir.join("InstrProfilingRuntime.cc"))
                 .include(dir)
-                .compile("libcompiler-rt.profile.a");
+                .compile("libprofiler-rt.a");
+
+    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let from = out_dir.join("libprofiler-rt.a");
+    let to = out_dir.join("..").join("..").join("..").join("libprofiler-rt.a");
+    fs::copy(from, to).unwrap(); 
 }

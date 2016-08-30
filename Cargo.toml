@@ -9,3 +9,7 @@ authors = ["Vadim Chugunov <vadimcn@gmail.com>"]
 [[bin]]
 name = "cargo-pgo"
 path = "src/main.rs"
+
+[dependencies]
+profiler-rt = { path = "profiler-rt" }
+profdata = { path = "llvm-profdata" }

@@ -1,8 +1,13 @@
 [package]
-name = "llvm-profdata"
+name = "profdata"
 version = "0.1.0"
 authors = ["Vadim Chugunov <vadimcn@gmail.com>"]
 build = "build.rs"
 
 [build-dependencies]
 cmake = "^0.1"
+gcc = "^0.3"
+cpp = { version = "0.1.0", git = "https://github.com/mystor/rust-cpp.git", features = ["build"] }
+
+[dependencies]
+cpp = { version = "0.1.0", git = "https://github.com/mystor/rust-cpp.git", features = ["macro"] }
