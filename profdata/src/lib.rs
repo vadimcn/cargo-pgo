@@ -3,6 +3,7 @@
 #[macro_use]
 extern crate cpp;
 
+// Adapted from llvm-profdata
 cpp! {
 
 #include "llvm/ADT/SmallSet.h"
@@ -28,72 +29,128 @@ cpp! {
 
 #include "rust_types.h"
 
+raw {
+  using namespace llvm;  
 
-fn merge_instr_profiles_impl(inputs: &[&str] as "rs::Slice<rs::Slice<char>>", 
-                             output: &str as "rs::Slice<char>") -> bool as "bool" {
-  using namespace llvm;
+  static void exitWithError(const Twine &Message, StringRef Whence = "",
+                            StringRef Hint = "") {
+    errs() << "error: ";
+    if (!Whence.empty())
+      errs() << Whence << ": ";
+    errs() << Message << "\n";
+    if (!Hint.empty())
+      errs() << Hint << "\n";
+  }
 
-  std::error_code EC;
-  raw_fd_ostream Output(StringRef(output.data, output.len), EC, sys::fs::F_None);
-  if (EC)
-    return false;
+  static void exitWithError(Error E, StringRef Whence = "") {
+    if (E.isA<InstrProfError>()) {
+      handleAllErrors(std::move(E), [&](const InstrProfError &IPE) {
+        instrprof_error instrError = IPE.get();
+        StringRef Hint = "";
+        if (instrError == instrprof_error::unrecognized_format) {
+          // Hint for common error of forgetting -sample for sample profiles.
+          Hint = "Perhaps you forgot to use the -sample option?";
+        }
+        exitWithError(IPE.message(), Whence, Hint);
+      });
+    }
 
-  InstrProfWriter Writer(false);
-  SmallSet<instrprof_error, 4> WriterErrorCodes;
+    exitWithError(toString(std::move(E)), Whence);
+  }
 
-  for (int i = 0; i < inputs.len; ++i) {
-    StringRef InputFileName(inputs.data[i].data, inputs.data[i].len);
-    int InputWeight = 1;
-    auto ReaderOrErr = InstrProfReader::create(InputFileName);
-    if (Error E = ReaderOrErr.takeError())
+  static void exitWithErrorCode(std::error_code EC, StringRef Whence = "") {
+    exitWithError(EC.message(), Whence);
+  }
+
+  static void handleMergeWriterError(Error E, StringRef WhenceFile = "",
+                                    StringRef WhenceFunction = "",
+                                    bool ShowHint = true) {
+    if (!WhenceFile.empty())
+      errs() << WhenceFile << ": ";
+    if (!WhenceFunction.empty())
+      errs() << WhenceFunction << ": ";
+
+    auto IPE = instrprof_error::success;
+    E = handleErrors(std::move(E),
+                    [&IPE](std::unique_ptr<InstrProfError> E) -> Error {
+                      IPE = E->get();
+                      return Error(std::move(E));
+                    });
+    errs() << toString(std::move(E)) << "\n";
+
+    if (ShowHint) {
+      StringRef Hint = "";
+      if (IPE != instrprof_error::success) {
+        switch (IPE) {
+        case instrprof_error::hash_mismatch:
+        case instrprof_error::count_mismatch:
+        case instrprof_error::value_site_count_mismatch:
+          Hint = "Make sure that all profile data to be merged is generated "
+                "from the same binary.";
+          break;
+        default:
+          break;
+        }
+      }
+
+      if (!Hint.empty())
+        errs() << Hint << "\n";
+    }
+  }
+}
+
+  fn merge_instr_profiles_impl(inputs: &[&str] as "rs::Slice<rs::Slice<char>>", 
+                              output: &str as "rs::Slice<char>") -> bool as "bool" {
+    llvm_shutdown_obj shutdown;
+
+    StringRef OutputFileName(output.data, output.len);
+    std::error_code EC;
+    raw_fd_ostream Output(OutputFileName, EC, sys::fs::F_None);
+    if (EC) {
+      exitWithErrorCode(EC, OutputFileName);
       return false;
+    }
 
-    auto Reader = std::move(ReaderOrErr.get());
-    bool IsIRProfile = Reader->isIRLevelProfile();
-    if (Writer.setIsIRLevelProfile(IsIRProfile))
-      return false;
+    InstrProfWriter Writer(false);
+    SmallSet<instrprof_error, 4> WriterErrorCodes;
 
-    for (auto &I : *Reader) {
-      if (Error E = Writer.addRecord(std::move(I), InputWeight)) {
-          return false;
+    for (int i = 0; i < inputs.len; ++i) {
+      StringRef InputFileName(inputs.data[i].data, inputs.data[i].len);
+      auto ReaderOrErr = InstrProfReader::create(InputFileName);
+      if (Error E = ReaderOrErr.takeError()) {
+        exitWithError(std::move(E), InputFileName);
+        return false;
+      }
+
+      auto Reader = std::move(ReaderOrErr.get());
+      bool IsIRProfile = Reader->isIRLevelProfile();
+      if (Writer.setIsIRLevelProfile(IsIRProfile)) {
+        exitWithError("Merge IR generated profile with Clang generated profile.");
+        return false;
+      }
+
+      for (auto &I : *Reader) {
+        if (Error E = Writer.addRecord(std::move(I), 1)) {
+          // Only show hint the first time an error occurs.
+          instrprof_error IPE = InstrProfError::take(std::move(E));
+          bool firstTime = WriterErrorCodes.insert(IPE).second;
+          handleMergeWriterError(make_error<InstrProfError>(IPE), InputFileName,
+                                I.Name, firstTime);
+        }
+      }
+      if (Reader->hasError()) {
+        exitWithError(Reader->getError(), InputFileName);
+        return false;
       }
     }
-    if (Reader->hasError())
-      return false;
+
+    Writer.write(Output);
+    return true;
   }
-  Writer.write(Output);
-  return true;
-}
-
 }
 
 pub fn merge_instr_profiles(inputs: &[&str], output: &str) -> bool {
-    unsafe {
-        merge_instr_profiles_impl(inputs, output)
-    }
+  unsafe {
+    merge_instr_profiles_impl(inputs, output)
+  }
 } 
-
-/*
-#[repr(C)]
-struct CStringRef {
-  ptr: *const c_char,
-  len: c_int,
-}
-
-extern "C" {
-    fn  _merge_instr_profiles(
-        num_inputs: c_int,
-        inputs: *const CStringRef,
-        output: CStringRef) -> c_bool;
-}
-
-pub fn merge_instr_profiles(inputs: &[&str], output: &str) -> bool {
-    unsafe {
-        let inputs: Vec<*const c_char> = inputs.collect(); 
-        _merge_instr_profiles(
-            inputs.len(),
-            &inputs, 
-            CStringRef { ptr: output.as_ptr(), len: output.len() })  
-    }
-}
-*/

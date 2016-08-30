@@ -20,6 +20,7 @@ fn main() {
                 .file(dir.join("InstrProfilingPlatformOther.c"))
                 .file(dir.join("InstrProfilingUtil.c"))
                 .file(dir.join("InstrProfilingRuntime.cc"))
+                .opt_level(2)
                 .include(dir)
                 .compile("libprofiler-rt.a");
 
