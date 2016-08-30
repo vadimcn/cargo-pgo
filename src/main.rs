@@ -81,7 +81,28 @@ fn instrumented(subcommand: &str, release_flag: bool, args: env::Args) {
     std::process::exit(exit_status.code().unwrap_or(-1));
 }
 
+fn optimized(subcommand: &str, release_flag: bool, args: env::Args) {
+    let mut args = args.collect::<Vec<_>>();
+    if release_flag {
+        args.insert(0, "--release".to_string());
+    }
+    if !merge_profiles() {
+        println!("Warning: no recorded profiling data was found.");
+    }
+    let old_rustflags = env::var("RUSTFLAGS").unwrap_or(String::new());
+    let rustflags = format!("{} -Cllvm-args=-profile-use=target/release/pgo/pgo.profdata",
+                            old_rustflags);
+    let mut child = Command::new("cargo")
+        .arg(subcommand)
+        .args(&args)
+        .env("RUSTFLAGS", rustflags)
+        .spawn().unwrap_or_else(|e| panic!("{}", e));
+    let exit_status = child.wait().unwrap_or_else(|e| panic!("{}", e));
+    std::process::exit(exit_status.code().unwrap_or(-1));
+}
+
 fn merge_profiles() -> bool {
+    // Get all target/release/pgo/*.profraw files
     let dir = match fs::read_dir("target/release/pgo") {
         Ok(dir) => dir,
         Err(_) => return false,
@@ -103,7 +124,7 @@ fn merge_profiles() -> bool {
     }
     let inputs: Vec<&str> = raw_profiles.iter().map(|p| p.to_str().unwrap()).collect();
     if !profdata::merge_instr_profiles(&inputs, "target/release/pgo/pgo.profdata") {
-        panic!("failed to merge profiles");
+        return false;
     }
     // Command::new("llvm-profdata")
     //     .arg("merge")
@@ -111,26 +132,6 @@ fn merge_profiles() -> bool {
     //     .arg("--output").arg("target/release/pgo/pgo.profdata")
     //     .output().expect("failed to execute llvm-profdata");
     return true;
-}
-
-fn optimized(subcommand: &str, release_flag: bool, args: env::Args) {
-    let mut args = args.collect::<Vec<_>>();
-    if release_flag {
-        args.insert(0, "--release".to_string());
-    }
-    if !merge_profiles() {
-        println!("Warning: no recorded profiling data was found.");
-    }
-    let old_rustflags = env::var("RUSTFLAGS").unwrap_or(String::new());
-    let rustflags = format!("{} -Cllvm-args=-profile-use=target/release/pgo/pgo.profdata",
-                            old_rustflags);
-    let mut child = Command::new("cargo")
-        .arg(subcommand)
-        .args(&args)
-        .env("RUSTFLAGS", rustflags)
-        .spawn().unwrap_or_else(|e| panic!("{}", e));
-    let exit_status = child.wait().unwrap_or_else(|e| panic!("{}", e));
-    std::process::exit(exit_status.code().unwrap_or(-1));
 }
 
 fn clean() {
