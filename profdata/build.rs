@@ -7,7 +7,7 @@ use std::env;
 fn main() {
     cmake::Config::new("llvm")
                  .profile("Release")
-                 .build_target("LLVMProfileData")
+                 .build_target("llvm-profdata")
                  .build();
 
     let out_dir = PathBuf::from(&env::var("OUT_DIR").unwrap()); 
@@ -26,10 +26,9 @@ fn main() {
         .include(out_dir.join("build/include"))
         .define("main", Some("profdata_main"))
         .compile("libmerge-profiles.a");
-    
+*/    
     println!("cargo:rustc-link-search={}", out_dir.join("build/lib").to_str().unwrap());
     println!("cargo:rustc-link-lib=LLVMCore");
     println!("cargo:rustc-link-lib=LLVMSupport");
     println!("cargo:rustc-link-lib=LLVMProfileData");
-*/    
 }

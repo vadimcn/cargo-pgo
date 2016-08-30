@@ -1,3 +1,5 @@
+extern crate profdata;
+
 use std::process::Command;
 use std::env;
 use std::fs;
@@ -79,7 +81,7 @@ fn merge_profiles() -> bool {
         Ok(dir) => dir,
         Err(_) => return false,
     };
-    let mut raw_profiles = Vec::<std::path::PathBuf>::new();
+    let mut raw_profiles: Vec<std::path::PathBuf> = vec![];
     for entry in dir {
         if let Ok(entry) = entry {
             if let Some(ext) = entry.path().extension() {
@@ -94,11 +96,15 @@ fn merge_profiles() -> bool {
     if raw_profiles.len() == 0 {
         return false;
     }
-    Command::new("llvm-profdata")
-        .arg("merge")
-        .args(&raw_profiles)
-        .arg("--output").arg("target/release/pgo/pgo.profdata")
-        .output().expect("failed to execute llvm-profdata");
+    let inputs: Vec<&str> = raw_profiles.iter().map(|p| p.to_str().unwrap()).collect();
+    if !profdata::merge_instr_profiles(&inputs, "target/release/pgo/pgo.profdata") {
+        panic!("failed to merge profiles");
+    }
+    // Command::new("llvm-profdata")
+    //     .arg("merge")
+    //     .args(&raw_profiles)
+    //     .arg("--output").arg("target/release/pgo/pgo.profdata")
+    //     .output().expect("failed to execute llvm-profdata");
     return true;
 }
 
