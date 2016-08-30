@@ -65,8 +65,13 @@ fn instrumented(subcommand: &str, release_flag: bool, args: env::Args) {
     if release_flag {
         args.insert(0, "--release".to_string());
     }
-    let rustflags = format!("--cfg=profiling -Cllvm-args=-profile-generate=target/release/pgo/%p.profraw -Lnative={0} -Clink-args=-lprofiler-rt",
-        env::current_exe().unwrap().parent().unwrap().to_str().unwrap());
+    let old_rustflags = env::var("RUSTFLAGS").unwrap_or(String::new());
+    let rustflags = format!("{0} --cfg=profiling \
+                            -Cllvm-args=-profile-generate=target/release/pgo/%p.profraw \
+                            -Lnative={1} -Clink-args=-lprofiler-rt",
+                            old_rustflags,
+                            env::current_exe().unwrap().parent().unwrap().to_str().unwrap());
+
     let mut child = Command::new("cargo")
         .arg(subcommand)
         .args(&args)
@@ -116,15 +121,16 @@ fn optimized(subcommand: &str, release_flag: bool, args: env::Args) {
     if !merge_profiles() {
         println!("Warning: no recorded profiling data was found.");
     }
-
-    let rustflags = "-Cllvm-args=-profile-use=target/release/pgo/pgo.profdata";
+    let old_rustflags = env::var("RUSTFLAGS").unwrap_or(String::new());
+    let rustflags = format!("{} -Cllvm-args=-profile-use=target/release/pgo/pgo.profdata",
+                            old_rustflags);
     let mut child = Command::new("cargo")
         .arg(subcommand)
         .args(&args)
         .env("RUSTFLAGS", rustflags)
         .spawn().unwrap_or_else(|e| panic!("{}", e));
     let exit_status = child.wait().unwrap_or_else(|e| panic!("{}", e));
-    std::process::exit(exit_status.code().unwrap_or(-1)); 
+    std::process::exit(exit_status.code().unwrap_or(-1));
 }
 
 fn clean() {
