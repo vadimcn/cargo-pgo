@@ -1,5 +1,5 @@
 [workspace]
-members = ["profiler-rt", "llvm-profdata"]
+members = ["profiler-rt", "profdata"]
 
 [package]
 name = "cargo-pgo"
@@ -12,4 +12,4 @@ path = "src/main.rs"
 
 [dependencies]
 profiler-rt = { path = "profiler-rt" }
-profdata = { path = "llvm-profdata" }
+profdata = { path = "profdata" }
