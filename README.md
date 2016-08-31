@@ -4,7 +4,7 @@
 - `git clone https://github.com/vadimcn/cargo-pgo.git`,
 - `cd cargo-pgo`,
 - `git submodule update --init` - this may take a while as LLVM is one of the upstream 
-    dependencies.  Fortunately, only a small part of it needs to be built.
+    dependencies.  Fortunately, only a small part of it actually needs to be built.
 - `cargo build --release`,
 - Add `cargo-pgo/target/release` to your PATH.
 
@@ -58,7 +58,7 @@ to rustc last time, and automatically rebuilds the target if they change.  Thus,
 would first revert the binary back to non-optimized state, which probably isn't what you want.)
 
 ### Do it quicker!
-Cargo automatically [re]builds stale binaries before running them, so you may skip both of the
+Cargo automatically (re)builds stale binaries before running them, so you may skip both of the
 build steps above and jump straight to running.  In addition to that, `cargo pgo opt ...` commands 
 will automatically merge raw profiles if needed.  So,
 ```
