@@ -2,7 +2,8 @@
 
 ## Setup
 - Clone this repo,
-- `git submodule update --init`,
+- `git submodule update --init` - this may take a while, since LLVM is one of the upstream 
+    dependencies.  Fortunately, only a small part of it needs to be built.
 - `cargo build --release`,
 - Add `target/release` to your PATH.
 
