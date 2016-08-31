@@ -1,13 +1,14 @@
 # Profile-Guided Optimization workflow for Cargo
 
 ## Setup
-- Clone this repo,
+- `git clone https://github.com/vadimcn/cargo-pgo.git`,
+- `cd cargo-pgo`,
 - `git submodule update --init` - this may take a while as LLVM is one of the upstream 
     dependencies.  Fortunately, only a small part of it needs to be built.
 - `cargo build --release`,
-- Add `target/release` to your PATH.
+- Add `cargo-pgo/target/release` to your PATH.
 
-Cargo install'ing is not supported, as it does not allow deployment of non-binary resources.
+Cargo install'ing is not supported at this time.
 
 ## Usage
 
