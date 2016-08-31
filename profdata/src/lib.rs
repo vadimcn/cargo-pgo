@@ -98,10 +98,16 @@ raw {
         errs() << Hint << "\n";
     }
   }
+
+  template<typename T>
+  struct Slice {
+    T* data;
+    uintptr_t len;
+  };
 }
 
-  fn merge_instr_profiles_impl(inputs: &[&str] as "rs::Slice<rs::Slice<char>>",
-                              output: &str as "rs::Slice<char>") -> bool as "bool" {
+  fn merge_instr_profiles_impl(inputs: &[&str] as "Slice<Slice<char>>",
+                              output: &str as "Slice<char>") -> bool as "bool" {
     llvm_shutdown_obj shutdown;
 
     StringRef OutputFileName(output.data, output.len);

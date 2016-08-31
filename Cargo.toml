@@ -7,7 +7,9 @@ version = "0.1.0"
 authors = ["Vadim Chugunov <vadimcn@gmail.com>"]
 
 [features]
-llvm-profdata = ["profdata/disable"] 
+# Use external `llvm-profdata` tool instead of the builtin profile merger.
+# Enabling this feature removes dependency on LLVM.
+llvm-profdata = ["profdata/disable"]
 
 [[bin]]
 name = "cargo-pgo"
