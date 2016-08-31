@@ -57,7 +57,7 @@ cargo pgo opt run|test|bench
 to rustc last time, and automatically rebuilds the target if they change.  Thus, `cargo run` 
 would first revert the binary back to non-optimized state, which probably isn't what you want.)
 
-### Do it quicker!
+### Do it in less steps
 Cargo automatically (re)builds stale binaries before running them, so you may skip both of the
 build steps above and jump straight to running.  In addition to that, `cargo pgo opt ...` commands 
 will automatically merge raw profiles if needed.  So,
