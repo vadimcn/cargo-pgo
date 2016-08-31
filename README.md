@@ -40,15 +40,14 @@ This will create `target/release/pgo.profdata` file.
 ### Run your optimized binary
 `cargo pgo opt run|test|bench`
 
-("Why not just 'cargo run'?" - you ask.  This is because Cargo keeps track of the flags it passed 
+("Why not just 'cargo run'?" - you ask.  Because Cargo keeps track of the flags it passed 
 to rustc last time, and automatically rebuilds the target if they change.  Thus, `cargo run` 
 would revert the binary back to non-optimized state, which probably isn't what you want.)
 
-### Do it quicker
-Because Cargo will automatically [re]build stale binaries before running them, you may skip both of the
+### Do it quicker!
+Cargo will automatically [re]build stale binaries before running them, so you may skip both of the
 build steps above and jump straight to running!  In addition to that, `cargo pgo opt ...` commands 
-will automatically merge raw profiles if needed.  Therefore, the above workflow can be accomplished
-in just two steps:  
+will automatically merge raw profiles if needed.  So:  
 
 `cargo pgo instr run`  
 `cargo pgo opt run`
