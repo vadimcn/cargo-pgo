@@ -4,7 +4,7 @@
 - `git clone https://github.com/vadimcn/cargo-pgo.git`,
 - `cd cargo-pgo`,
 - `git submodule update --init` - this may take a while as LLVM is one of the upstream 
-    dependencies.  Fortunately, only a small part of it actually needs to be built.
+    dependencies.  Fortunately, only a small part of it needs to be built.
 - `cargo build --release`,
 - Add `cargo-pgo/target/release` to your PATH.
 
@@ -41,7 +41,7 @@ Before using generated profiles, they must be first merged into an 'indexed' for
 ```
 cargo pgo merge
 ``` 
-The output will be saved in `target/release/pgo.profdata`.
+The output will be saved in `target/release/pgo/merged.profdata`.
 
 ### Build optimized binary
 ```
