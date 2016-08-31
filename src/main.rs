@@ -85,7 +85,7 @@ fn optimized(subcommand: &str, release_flag: bool, args: env::Args) {
         args.insert(0, "--release".to_string());
     }
     if !merge_profiles() {
-        println!("Warning: no recorded profiling data was found.");
+        println!("Warning: no profiling data was found - this build will not be PGO-optimized.");
     }
     let old_rustflags = env::var("RUSTFLAGS").unwrap_or(String::new());
     let rustflags = format!("{} -Cllvm-args=-profile-use=target/release/pgo/merged.profdata",
@@ -106,17 +106,25 @@ fn gather_raw_profiles() -> Vec<std::path::PathBuf> {
         Err(_) => return vec![],
     };
     let mut raw_profiles = Vec::new();
+    let mut found_empty = false;
     for entry in dir {
         if let Ok(entry) = entry {
             if let Some(ext) = entry.path().extension() {
-                if let Ok(metadata) = entry.metadata() {
-                    if metadata.len() > 0 && ext == "profraw" {
-                        raw_profiles.push(entry.path());
+                if ext == "profraw" {
+                    if let Ok(metadata) = entry.metadata() {
+                        if metadata.len() > 0 {
+                            raw_profiles.push(entry.path());
+                        } else {
+                            found_empty = true;
+                        }
                     }
                 }
             }
         }
-    }  
+    }
+    if found_empty {
+        println!("Warhing: empty profiling data files were found - some training runs may have crashed.");
+    }
     raw_profiles  
 }
 
