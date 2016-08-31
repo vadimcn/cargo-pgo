@@ -2,7 +2,7 @@
 
 ## Setup
 - Clone this repo,
-- `git submodule update --init` - this may take a while, since LLVM is one of the upstream 
+- `git submodule update --init` - this may take a while as LLVM is one of the upstream 
     dependencies.  Fortunately, only a small part of it needs to be built.
 - `cargo build --release`,
 - Add `target/release` to your PATH.
@@ -34,10 +34,10 @@ Before using generated profiles, they must be first merged into an 'indexed' for
 `cargo pgo merge`  
 This will create `target/release/pgo.profdata` file.
 
-### Build an optimized binary
+### Build optimized binary
 `cargo pgo opt build`
 
-### Run your optimized binary
+### Run optimized binary
 `cargo pgo opt run|test|bench`
 
 ("Why not just 'cargo run'?" - you ask.  Because Cargo keeps track of the flags it passed 
