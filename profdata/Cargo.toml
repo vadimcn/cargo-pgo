@@ -11,3 +11,6 @@ cpp = { version = "0.1.0", git = "https://github.com/mystor/rust-cpp.git", featu
 
 [dependencies]
 cpp = { version = "0.1.0", git = "https://github.com/mystor/rust-cpp.git", features = ["macro"] }
+
+[features]
+disable = [] # Used to suppress compilation in this crate

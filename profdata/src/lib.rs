@@ -1,3 +1,4 @@
+#![cfg(not(feature = "disable"))]
 #![allow(improper_ctypes)]
 
 #[macro_use]

@@ -6,6 +6,9 @@ name = "cargo-pgo"
 version = "0.1.0"
 authors = ["Vadim Chugunov <vadimcn@gmail.com>"]
 
+[features]
+llvm-profdata = ["profdata/disable"] 
+
 [[bin]]
 name = "cargo-pgo"
 path = "src/main.rs"

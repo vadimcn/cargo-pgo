@@ -1,5 +1,3 @@
-extern crate profdata;
-
 use std::process::Command;
 use std::env;
 use std::fs;
@@ -48,7 +46,7 @@ fn usage_and_exit() {
               \nCommands:\
               \n    instr build|rustc ...    - build an instrumented binary\
               \n    instr run|test|bench ... - run the instrumented binary while recording profiling data\
-              \n    merge                    - merge raw profiling data using llvm-profdata\
+              \n    merge                    - merge raw profiling data\
               \n    opt build|rustc ...      - merge raw profiling data, then build an optimized binary\
               \n    opt run|test|bench ...   - run the optimized binary\
               \n    clean                    - remove recorded profiling data");
@@ -101,13 +99,13 @@ fn optimized(subcommand: &str, release_flag: bool, args: env::Args) {
     std::process::exit(exit_status.code().unwrap_or(-1));
 }
 
-fn merge_profiles() -> bool {
-    // Get all target/release/pgo/*.profraw files
+// Get all target/release/pgo/*.profraw files
+fn gather_raw_profiles() -> Vec<std::path::PathBuf> {
     let dir = match fs::read_dir("target/release/pgo") {
         Ok(dir) => dir,
-        Err(_) => return false,
+        Err(_) => return vec![],
     };
-    let mut raw_profiles: Vec<std::path::PathBuf> = vec![];
+    let mut raw_profiles = Vec::new();
     for entry in dir {
         if let Ok(entry) = entry {
             if let Some(ext) = entry.path().extension() {
@@ -118,7 +116,16 @@ fn merge_profiles() -> bool {
                 }
             }
         }
-    }
+    }  
+    raw_profiles  
+}
+
+#[cfg(not(feature="llvm-profdata"))]
+// Use built-in profile merger
+fn merge_profiles() -> bool {
+    extern crate profdata;
+
+    let raw_profiles = gather_raw_profiles();
     if raw_profiles.len() == 0 {
         return false;
     }
@@ -126,12 +133,23 @@ fn merge_profiles() -> bool {
     if !profdata::merge_instr_profiles(&inputs, "target/release/pgo/pgo.profdata") {
         return false;
     }
-    // Command::new("llvm-profdata")
-    //     .arg("merge")
-    //     .args(&raw_profiles)
-    //     .arg("--output").arg("target/release/pgo/pgo.profdata")
-    //     .output().expect("failed to execute llvm-profdata");
     return true;
+}
+
+#[cfg(feature="llvm-profdata")]
+// Use external tool
+fn merge_profiles() -> bool {
+    let raw_profiles = gather_raw_profiles();
+    if raw_profiles.len() == 0 {
+        return false;
+    }
+    let mut child = Command::new("llvm-profdata")
+        .arg("merge")
+        .args(&raw_profiles)
+        .arg("--output").arg("target/release/pgo/pgo.profdata")
+        .spawn().unwrap_or_else(|e| panic!("{}", e));
+    let exit_status = child.wait().unwrap_or_else(|e| panic!("{}", e));
+    return exit_status.code() == Some(0);
 }
 
 fn clean() {

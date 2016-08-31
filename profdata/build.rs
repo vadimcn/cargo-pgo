@@ -5,6 +5,9 @@ use std::path::PathBuf;
 use std::env;
 
 fn main() {
+    if env::var("CARGO_FEATURE_DISABLE").is_ok() {
+        return;
+    }
     cmake::Config::new("llvm")
         .define("LLVM_ENABLE_ZLIB", "OFF")
         .profile("Release")
