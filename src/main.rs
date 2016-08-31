@@ -88,7 +88,7 @@ fn optimized(subcommand: &str, release_flag: bool, args: env::Args) {
         println!("Warning: no recorded profiling data was found.");
     }
     let old_rustflags = env::var("RUSTFLAGS").unwrap_or(String::new());
-    let rustflags = format!("{} -Cllvm-args=-profile-use=target/release/pgo/pgo.profdata",
+    let rustflags = format!("{} -Cllvm-args=-profile-use=target/release/pgo/merged.profdata",
                             old_rustflags);
     let mut child = Command::new("cargo")
         .arg(subcommand)
@@ -130,7 +130,7 @@ fn merge_profiles() -> bool {
         return false;
     }
     let inputs: Vec<&str> = raw_profiles.iter().map(|p| p.to_str().unwrap()).collect();
-    if !profdata::merge_instr_profiles(&inputs, "target/release/pgo/pgo.profdata") {
+    if !profdata::merge_instr_profiles(&inputs, "target/release/pgo/merged.profdata") {
         return false;
     }
     return true;
@@ -146,7 +146,7 @@ fn merge_profiles() -> bool {
     let mut child = Command::new("llvm-profdata")
         .arg("merge")
         .args(&raw_profiles)
-        .arg("--output").arg("target/release/pgo/pgo.profdata")
+        .arg("--output").arg("target/release/pgo/merged.profdata")
         .spawn().unwrap_or_else(|e| panic!("{}", e));
     let exit_status = child.wait().unwrap_or_else(|e| panic!("{}", e));
     return exit_status.code() == Some(0);
