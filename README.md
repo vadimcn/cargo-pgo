@@ -7,6 +7,8 @@
 - `cargo build --release`,
 - Add `target/release` to your PATH.
 
+Cargo install'ing is not supported, as it does not allow deployment of non-binary resources.
+
 ## Usage
 
 ### Remove any stale profiling data
