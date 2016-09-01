@@ -15,6 +15,3 @@ cpp = { version = "0.1.0", features = ["build"] }
 
 [dependencies]
 cpp = { version = "0.1.0", features = ["macro"] }
-
-[features]
-disable = [] # Used to suppress compilation in this crate

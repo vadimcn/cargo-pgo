@@ -7,14 +7,13 @@ version = "0.1.0"
 authors = ["Vadim Chugunov <vadimcn@gmail.com>"]
 
 [features]
-# Use external `llvm-profdata` tool instead of the builtin profile merger.
-# Enabling this feature removes dependency on LLVM.
-llvm-profdata = ["profdata/disable"]
+default = ["standalone"]
+standalone = ["profiler-rt", "profdata"]
 
 [[bin]]
 name = "cargo-pgo"
 path = "src/main.rs"
 
 [dependencies]
-profiler-rt = { path = "profiler-rt" }
-profdata = { path = "profdata" }
+profiler-rt = { path = "profiler-rt", optional = true }
+profdata = { path = "profdata", optional = true }
