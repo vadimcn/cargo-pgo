@@ -83,7 +83,8 @@ fn instrumented(subcommand: &str, release_flag: bool, args: env::Args) {
         format!("clang_rt.profile-{0}", get_clang_target_arch())
     };
     let rustflags = format!("{0} --cfg=profiling \
-                            -Cllvm-args=-profile-generate=target/release/pgo/%p.profraw \
+                            -Cllvm-args=-profile-generate \
+                            -Cllvm-args=-profile-generate-file=target/release/pgo/%p.profraw \
                             -Lnative={1} -Clink-args=-l{2}",
                             old_rustflags,
                             env::current_exe().unwrap().parent().unwrap().to_str().unwrap(),
